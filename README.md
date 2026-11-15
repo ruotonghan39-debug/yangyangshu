@@ -43,6 +43,6 @@ python3 -m http.server 8765 --bind 127.0.0.1
 - `app.js` 页面交互与本地保存
 - `tests/core.test.cjs` 核心回归测试，安装 Node 后运行 `node tests/core.test.cjs`
 
-项目已初始化本地 Git。后续可添加你的 GitHub 仓库为 remote 并推送；本次未创建远程仓库或上传。JSON 备份不纳入版本管理。
+项目使用 Git 管理，私有 GitHub 仓库：`ruotonghan39-debug/yangyangshu`。JSON 备份不纳入版本管理。
 
 背景图片为用户提供的游戏素材，未修改原图。发布时请确认素材使用范围。
