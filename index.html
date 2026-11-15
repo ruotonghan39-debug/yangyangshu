@@ -1,10 +1,30 @@
 <!doctype html>
-<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#702b43"><title>痒痒鼠 · 平安手帖</title><link rel="stylesheet" href="styles.css"><script defer src="core.js"></script><script defer src="app.js"></script></head>
-<body><div class="wallpaper" aria-hidden="true"></div><div id="storage-warning" role="alert" hidden></div>
-<header class="topbar"><a class="brand" href="#daily"><span class="brand-mark">陰</span><span>痒痒鼠 <small>平安手帖</small></span></a><div class="top-actions"><span class="local-label"><i></i> 本地手帖</span><button id="export" class="quiet">导出备份 ↗</button><button id="settings" class="icon-button" aria-label="偏好设置">⚙</button></div></header>
-<main><section class="hero"><div class="eyebrow">ONMYOJI / PERSONAL JOURNAL</div><p id="today-label" class="date-label"></p><h1>日有所积，<br>终有所获<span>。</span></h1><p class="hero-copy">把平安京的每一份收获，都好好记下。</p><div class="hero-foot"><span class="hero-rule"></span><span>笼梦祸津神 · 今日相伴</span></div></section>
-<section class="summary-grid" aria-label="完成概览"><article><span>今日进度</span><strong id="daily-count">0 / 0</strong><div class="progress"><i id="daily-progress"></i></div></article><article><span>本周进度</span><strong id="weekly-count">0 / 0</strong><div class="progress"><i id="weekly-progress"></i></div></article><article class="fragment-summary"><span>黑碎收集</span><strong id="fragment-count">0 <small>/ 50 片</small></strong><p id="fragment-hint"></p></article></section>
-<div class="workspace"><section class="main-panel"><nav class="tabs" aria-label="手帖导航"><a href="#daily" data-tab="daily">每日待办</a><a href="#weekly" data-tab="weekly">每周待办</a><a href="#once" data-tab="once">奖励追踪</a><a href="#resources" data-tab="resources">资源账本</a><a href="#history" data-tab="history">历史记录</a></nav><div id="view"></div></section>
-<aside><section class="card inventory"><div class="section-heading"><h2>我的资源</h2><button class="text-button" id="edit-resources">更新 ↗</button></div><p class="caption">手动记录 · 以游戏内实际余额为准</p><div id="resource-list"></div><div class="egg-progress"><div><span>御行达摩碎片</span><strong id="egg-ratio"></strong></div><div class="progress"><i id="egg-progress"></i></div><p id="egg-hint"></p><button class="quiet" id="synthesize">合成黑蛋</button></div></section><section class="card note-card"><span class="eyebrow">小小提醒</span><h3>这周的分享，别忘了。</h3><p>地域鬼王、秘闻竞速、式神图鉴，分别记下，奖励不漏领。</p><button class="text-button" id="go-weekly">查看每周待办 →</button></section><p class="aside-foot">一份属于自己的平安京日常。<br>数据仅保存在当前浏览器。</p></aside></div>
-<footer><span>痒痒鼠 · 平安手帖</span><span id="reset-label"></span></footer></main>
-<dialog id="modal"><form id="modal-form"><div class="modal-heading"><h2 id="modal-title"></h2><button type="button" id="close-modal" aria-label="关闭" class="icon-button">×</button></div><div id="modal-content"></div><div class="modal-actions"><button type="button" id="cancel-modal" class="quiet">取消</button><button type="submit" class="primary" id="save-modal">保存</button></div></form></dialog><div id="toast" role="status" aria-live="polite"></div><input id="import-file" type="file" accept="application/json,.json" hidden></body></html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#702b43"><title>痒痒鼠 · 平安手帖</title><link rel="stylesheet" href="styles.css"><script defer src="core.js"></script><script defer src="lineup-store.js"></script><script defer src="app.js"></script></head>
+<body>
+<div class="wallpaper" aria-hidden="true"></div>
+<aside class="sidebar">
+ <a class="brand" href="#daily"><span class="brand-mark">陰</span><span>痒痒鼠 <small>平安手帖</small></span></a>
+ <button type="button" id="player-profile" class="player-profile" aria-label="设置游戏名称和等级"><span id="player-avatar" class="player-avatar" aria-hidden="true">陰</span><span class="player-info"><strong id="player-name">设置游戏名称</strong><small id="player-hint">点击填写游戏名称与等级</small></span><span id="player-level" class="player-level" hidden></span></button>
+ <p class="sidebar-label">我的平安京日常</p>
+ <nav class="tabs" aria-label="手帖导航">
+  <a href="#daily" data-tab="daily"><span aria-hidden="true">☀</span>每日待办</a>
+  <a href="#weekly" data-tab="weekly"><span aria-hidden="true">◷</span>每周待办</a>
+  <a href="#resources" data-tab="resources"><span aria-hidden="true">◈</span>资源统计</a>
+  <a href="#lineups" data-tab="lineups"><span aria-hidden="true">▤</span>阵容码管理</a>
+  <a href="#once" data-tab="once"><span aria-hidden="true">✧</span>奖励追踪</a>
+  <a href="#history" data-tab="history"><span aria-hidden="true">↺</span>历史记录</a>
+ </nav>
+ <div class="sidebar-bottom"><span class="local-label"><i></i> 数据保存在此浏览器</span><button id="export" class="quiet">导出完整备份 ↗</button><button id="settings" class="quiet">偏好与数据 ⚙</button><p>日有所积，终有所获。</p></div>
+</aside>
+<main>
+ <div id="storage-warning" role="alert" hidden></div>
+ <div id="lineup-warning" role="alert" hidden></div>
+ <header class="page-header"><div><div class="eyebrow">ONMYOJI / PERSONAL JOURNAL</div><h1>平安手帖<span>。</span></h1></div><p id="today-label" class="date-label"></p></header>
+ <section class="summary-grid" aria-label="完成概览"><article><span>今日进度</span><strong id="daily-count">0 / 0</strong><div class="progress"><i id="daily-progress"></i></div></article><article><span>本周进度</span><strong id="weekly-count">0 / 0</strong><div class="progress"><i id="weekly-progress"></i></div></article><article class="fragment-summary"><span>黑碎收集</span><strong id="fragment-count">0 <small>/ 50 片</small></strong><p id="fragment-hint"></p></article></section>
+ <div class="workspace"><section class="main-panel"><div id="view"></div></section>
+ <aside class="resource-aside"><section class="card inventory"><div class="section-heading"><h2>我的资源</h2><button class="text-button" id="edit-resources">更新 ↗</button></div><p class="caption">手动记录 · 以游戏内实际余额为准</p><div id="resource-list"></div><div class="egg-progress"><div><span>御行达摩碎片</span><strong id="egg-ratio"></strong></div><div class="progress"><i id="egg-progress"></i></div><p id="egg-hint"></p><button class="quiet" id="synthesize">合成黑蛋</button></div></section><section class="card note-card"><span class="eyebrow">小小提醒</span><h3>这周的分享，别忘了。</h3><p>地域鬼王、秘闻竞速、式神图鉴，分别记下，奖励不漏领。</p><button class="text-button" id="go-weekly">查看每周待办 →</button></section></aside></div>
+ <footer><span>痒痒鼠 · 平安手帖</span><span id="reset-label"></span></footer>
+</main>
+<dialog id="modal"><form id="modal-form"><div class="modal-heading"><h2 id="modal-title"></h2><button type="button" id="close-modal" aria-label="关闭" class="icon-button">×</button></div><div id="modal-content"></div><div class="modal-actions"><button type="button" id="cancel-modal" class="quiet">取消</button><button type="submit" class="primary" id="save-modal">保存</button></div></form></dialog><div id="toast" role="status" aria-live="polite"></div><input id="import-file" type="file" accept="application/json,.json" hidden>
+</body></html>

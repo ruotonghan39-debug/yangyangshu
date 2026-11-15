@@ -1,7 +1,21 @@
 /* Pure data operations; runs in browsers and in the regression test runner. */
 (function(root){
 'use strict';
-const RESOURCES={jade:['勾玉','枚','◈'],gold:['金币','枚','◎'],ticket:['蓝票','张','▱'],energy:['体力','点','ϟ'],egg:['黑蛋','颗','●'],fragment:['黑碎','片','◕']};
+const RESOURCES={jade:['勾玉','','◈'],gold:['金币','万','◎'],ticket:['蓝票','','▱'],energy:['体力','万','ϟ'],egg:['黑蛋','','●'],fragment:['黑碎','','◕']};
+const scaledResource=k=>k==='gold'||k==='energy';
+// Keep existing balances and ledger entries in whole game units.
+function resourceInput(k,n){
+ if(!scaledResource(k))return String(n);
+ const whole=Math.floor(n/10000),fraction=String(n%10000).padStart(4,'0').replace(/0+$/,'');
+ return String(whole)+(fraction?'.'+fraction:'');
+}
+function parseResourceInput(k,value){
+ const text=String(value).trim(),scaled=scaledResource(k);
+ if(!(scaled?/^(?:\d+(?:\.\d{0,4})?|\.\d{1,4})$/:/^\d+$/).test(text))throw Error(scaled?'金币和体力按万填写，最多支持 4 位小数':'资源数量需为非负整数');
+ const [whole,fraction='']=text.split('.'),n=BigInt(whole||'0')*BigInt(scaled?10000:1)+(scaled?BigInt(fraction.padEnd(4,'0')):0n);
+ if(n>BigInt(Number.MAX_SAFE_INTEGER))throw Error('资源数量超出允许范围');
+ return Number(n);
+}
 const dateKey=d=>new Date(d).toISOString().slice(0,10);
 function periods(now=new Date(),hour=0){
  const game=new Date(now.getTime()+8*3600000-hour*3600000);
@@ -35,7 +49,7 @@ function fresh(){
  ['once','地域鬼王成就','仅记录尚未完成的成就，具体奖励逐条核对。','一次性奖励','条件奖励 · 待核对'],
  ['once','式神传记奖励','按式神逐条核对传记奖励，可新增单独条目。','一次性奖励','具体奖励待核对'],
  ['once','逢魔成就奖励','检查未完成的首领成就与一次性奖励。','一次性奖励','黑碎等 · 待核对']];
- return {version:1,tasks:defs.map((d,i)=>({id:'seed-'+i,cycle:d[0],title:d[1],note:d[2],group:d[3],reward:d[4]})),records:{},resources:Object.fromEntries(Object.keys(RESOURCES).map(k=>[k,0])),ledger:[],events:[],settings:{resetHour:0,scenery:false},createdAt:new Date().toISOString()};
+ return {version:1,tasks:defs.map((d,i)=>({id:'seed-'+i,cycle:d[0],title:d[1],note:d[2],group:d[3],reward:d[4]})),records:{},resources:Object.fromEntries(Object.keys(RESOURCES).map(k=>[k,0])),ledger:[],events:[],settings:{resetHour:0,scenery:false,gameName:'',gameLevel:null},createdAt:new Date().toISOString()};
 }
 function toggle(s,task,now=new Date()){
  const key=recordKey(task,now,s.settings.resetHour),prev=s.records[key];
@@ -64,6 +78,8 @@ function validate(v){
  const validPeriod=p=>p==='once'||(str(p,12)&&/^[dw]:\d{4}-\d{2}-\d{2}$/.test(p)&&Number.isFinite(Date.parse(p.slice(2))));
  if(!plain(v)||v.version!==1||!Array.isArray(v.tasks)||v.tasks.length>1000||!plain(v.records)||!plain(v.resources)||!Array.isArray(v.events)||!Array.isArray(v.ledger)||!plain(v.settings))fail();
  if(!Number.isInteger(v.settings.resetHour)||v.settings.resetHour<0||v.settings.resetHour>23||typeof v.settings.scenery!=='boolean'||!validDate(v.createdAt))fail();
+ const gameName=own(v.settings,'gameName')?v.settings.gameName:'',gameLevel=own(v.settings,'gameLevel')?v.settings.gameLevel:null;
+ if(!str(gameName,40)||(gameLevel!==null&&(!Number.isInteger(gameLevel)||gameLevel<1||gameLevel>999)))fail();
  const ids=new Set();
  for(const t of v.tasks){if(!plain(t)||!str(t.id,80)||!/^[\w-]+$/.test(t.id)||ids.has(t.id)||!['daily','weekly','once'].includes(t.cycle)||!str(t.title,100)||!t.title.trim()||!str(t.note)||!str(t.group,50)||!str(t.reward,150))fail();ids.add(t.id);}
  const records=Object.entries(v.records);if(records.length>100000||v.events.length>100000||v.ledger.length>100000)fail();
@@ -72,7 +88,32 @@ function validate(v){
  for(const e of v.events){if(!plain(e)||!validDate(e.at)||!str(e.title,100)||!['完成待办','取消完成','删除待办'].includes(e.action)||!validPeriod(e.period))fail();}
  for(const l of v.ledger){if(!plain(l)||!validDate(l.at)||!str(l.note,500)||!plain(l.delta)||!plain(l.balance))fail();for(const k of Object.keys(RESOURCES))if(!int(l.balance[k]))fail();for(const [k,n] of Object.entries(l.delta))if(!own(RESOURCES,k)||!Number.isSafeInteger(n))fail();}
  // Reconstruct only supported fields; imported object keys never enter application prototypes.
- return {version:1,tasks:v.tasks.map(t=>({id:t.id,cycle:t.cycle,title:t.title,note:t.note,group:t.group,reward:t.reward})),records:Object.fromEntries(records.map(([k,r])=>[k,{taskId:r.taskId,title:r.title,cycle:r.cycle,period:r.period,done:r.done,at:r.at}])),resources:Object.fromEntries(Object.keys(RESOURCES).map(k=>[k,v.resources[k]])),ledger:v.ledger.map(l=>({at:l.at,note:l.note,delta:{...l.delta},balance:Object.fromEntries(Object.keys(RESOURCES).map(k=>[k,l.balance[k]]))})),events:v.events.map(e=>({at:e.at,title:e.title,action:e.action,period:e.period})),settings:{resetHour:v.settings.resetHour,scenery:v.settings.scenery},createdAt:v.createdAt};
+ return {version:1,tasks:v.tasks.map(t=>({id:t.id,cycle:t.cycle,title:t.title,note:t.note,group:t.group,reward:t.reward})),records:Object.fromEntries(records.map(([k,r])=>[k,{taskId:r.taskId,title:r.title,cycle:r.cycle,period:r.period,done:r.done,at:r.at}])),resources:Object.fromEntries(Object.keys(RESOURCES).map(k=>[k,v.resources[k]])),ledger:v.ledger.map(l=>({at:l.at,note:l.note,delta:{...l.delta},balance:Object.fromEntries(Object.keys(RESOURCES).map(k=>[k,l.balance[k]]))})),events:v.events.map(e=>({at:e.at,title:e.title,action:e.action,period:e.period})),settings:{resetHour:v.settings.resetHour,scenery:v.settings.scenery,gameName,gameLevel},createdAt:v.createdAt};
 }
-root.JournalCore={RESOURCES,periods,period,recordKey,fresh,toggle,updateResources,synthesize,validate};
+function validateLineups(items){
+ const fail=()=>{throw Error('阵容数据格式不正确，或超过容量上限（500 套、图片合计 90 MB）');};
+ const str=(s,n)=>typeof s==='string'&&s.length<=n;
+ const date=s=>str(s,40)&&Number.isFinite(Date.parse(s));
+ if(!Array.isArray(items)||items.length>500)fail();
+ const ids=new Set();let total=0;
+ return items.map(item=>{
+  if(!item||typeof item!=='object'||!str(item.id,80)||!/^[\w-]+$/.test(item.id)||ids.has(item.id)||!str(item.title,100)||!item.title.trim()||!str(item.category,50)||!item.category.trim()||!str(item.code,20000)||!str(item.note,2000)||!date(item.createdAt)||!date(item.updatedAt)||!Array.isArray(item.images)||item.images.length>4||(!item.code.trim()&&!item.images.length))fail();
+  ids.add(item.id);
+  const images=item.images.map(img=>{
+   if(!img||!str(img.name,255)||!['image/png','image/jpeg','image/webp','image/gif'].includes(img.type)||!str(img.data,11200000))fail();
+   const prefix='data:'+img.type+';base64,';
+   if(!img.data.startsWith(prefix)||!img.data.slice(prefix.length)||!/^[A-Za-z0-9+/]+={0,2}$/.test(img.data.slice(prefix.length))||img.data.slice(prefix.length).length%4!==0)fail();
+   const bytes=img.data.slice(prefix.length).length/4*3-(img.data.endsWith('==')?2:img.data.endsWith('=')?1:0);
+   if(bytes>8*1024*1024)fail();total+=img.data.length;if(total>90*1024*1024)fail();
+   return {name:img.name,type:img.type,data:img.data};
+  });
+  return {id:item.id,title:item.title,category:item.category,code:item.code,note:item.note,images,createdAt:item.createdAt,updatedAt:item.updatedAt};
+ });
+}
+function validateBackup(value){
+ if(value?.version===1)return {journal:validate(value),lineups:null};
+ if(value?.version!==2)throw Error('备份版本不受支持');
+ return {journal:validate(value.journal),lineups:validateLineups(value.lineups)};
+}
+root.JournalCore={RESOURCES,scaledResource,resourceInput,parseResourceInput,periods,period,recordKey,fresh,toggle,updateResources,synthesize,validate,validateLineups,validateBackup};
 })(globalThis);
