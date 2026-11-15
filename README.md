@@ -4,9 +4,9 @@
 
 ## 在线访问与部署
 
-在线地址：https://yangyangshu-ruotonghan39.ruotonghan39.chatgpt.site
+在线地址：https://ruotonghan39-debug.github.io/yangyangshu/
 
-代码保存在私有 GitHub 仓库，网页通过 Sites 部署。运行 `python3 scripts/build-static.py` 生成 `dist/` 静态文件；托管配置在 `.openai/hosting.json`。修改代码后需提交并推送 GitHub，再发布对应网站版本。
+代码保存在公开 GitHub 仓库，网页通过 GitHub Pages 部署。发布源为 `main` 分支的根目录；修改代码后提交并推送到 `main`，GitHub 会自动更新网站。`.nojekyll` 用于直接发布原生静态文件。
 
 本地网页的数据不会自动迁移到在线地址；请先导出备份，再在在线网页导入。
 
@@ -51,6 +51,6 @@ python3 -m http.server 8765 --bind 127.0.0.1
 - `app.js` 页面交互与本地保存
 - `tests/core.test.cjs` 核心回归测试，安装 Node 后运行 `node tests/core.test.cjs`
 
-项目使用 Git 管理，私有 GitHub 仓库：`ruotonghan39-debug/yangyangshu`。JSON 备份不纳入版本管理。
+项目使用 Git 管理，公开 GitHub 仓库：`ruotonghan39-debug/yangyangshu`。JSON 备份不纳入版本管理。
 
 背景图片为用户提供的游戏素材，未修改原图。发布时请确认素材使用范围。
