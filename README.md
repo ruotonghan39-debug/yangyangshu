@@ -2,6 +2,14 @@
 
 阴阳师个人待办与资源管理网页。本地优先，原生 HTML / CSS / JavaScript，无依赖，不需要安装 Node 或运行服务器。
 
+## 在线访问与部署
+
+在线地址：https://yangyangshu-ruotonghan39.ruotonghan39.chatgpt.site
+
+代码保存在私有 GitHub 仓库，网页通过 Sites 部署。运行 `python3 scripts/build-static.py` 生成 `dist/` 静态文件；托管配置在 `.openai/hosting.json`。修改代码后需提交并推送 GitHub，再发布对应网站版本。
+
+本地网页的数据不会自动迁移到在线地址；请先导出备份，再在在线网页导入。
+
 ## 开始使用
 
 双击本目录的 `index.html`，使用常用浏览器打开。建议固定使用同一个浏览器、同一个文件路径。浏览器若限制本地文件存储，可用 Python 启动预览：
